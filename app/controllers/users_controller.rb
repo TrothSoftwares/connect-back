@@ -14,47 +14,92 @@ class UsersController < ApplicationController
   respond_to :json
 
 
+def forgotauthenticateotp
 
-def authenticateotp
-
-  @user = User.find(params[:user_id])
+  @user = User.where("phone = ?", params[:phone] ).first
   otp = params[:otp]
   # if @user.authenticate_otp(otp, drift: 60)
     @user.otpconfirmed = true
     @user.save
-    render json: @user, status: :ok
+
+    loggedinuser = sign_in(:user, @user)
+    puts loggedinuser.id
+data = {
+  user_id: loggedinuser.id,
+  token: loggedinuser.authentication_token,
+  phone: loggedinuser.phone,
+  otpconfirmed: loggedinuser.otpconfirmed
+}
+
+    render json: data, status: :created
+
   # else
     # render json: 'incorrect' ,  status: :unprocessable_entity
-
   # end
 
 
 end
 
 
+def forgotsendotp
+
+  puts params[:phone]
+
+
+   @user = User.where("phone = ?", params[:phone] ).first
+
+
+  otpcode = @user.otp_code
+
+  puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
+
+  url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
+
+  http = Net::HTTP.new(url.host, url.port)
+
+  request = Net::HTTP::Get.new(url)
+  request.body = "{}"
+
+  response = http.request(request)
+  puts response.read_body
+
+end
+
+
+
+  def authenticateotp
+    @user = User.find(params[:user_id])
+    otp = params[:otp]
+    if @user.authenticate_otp(otp, drift: 60)
+      @user.otpconfirmed = true
+      @user.save
+      render json: @user, status: :ok
+    else
+      render json: 'incorrect' ,  status: :unprocessable_entity
+    end
+  end
+
+
 
   def sendotp
     puts params[:user_id]
-
 
     @user = User.find(params[:user_id])
 
     otpcode = @user.otp_code
 
-puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
+    puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
 
-url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
+    url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
 
-http = Net::HTTP.new(url.host, url.port)
+    http = Net::HTTP.new(url.host, url.port)
 
-request = Net::HTTP::Get.new(url)
-request.body = "{}"
+    request = Net::HTTP::Get.new(url)
+    request.body = "{}"
 
-response = http.request(request)
-puts response.read_body
-
+    response = http.request(request)
+    puts response.read_body
   end
-
 
 
   def create
