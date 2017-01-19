@@ -1,4 +1,6 @@
 class User < ActiveRecord::Base
+  has_one_time_password 
+
   before_save :ensure_authentication_token
 
   devise :database_authenticatable, :recoverable, :trackable, :validatable

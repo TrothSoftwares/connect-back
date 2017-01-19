@@ -9,7 +9,8 @@ class SessionsController < Devise::SessionsController
          data = {
            user_id: resource.id,
            token: resource.authentication_token,
-           phone: resource.phone
+           phone: resource.phone,
+           otpconfirmed: resource.otpconfirmed
          }
          render json: data, status: :created
 
