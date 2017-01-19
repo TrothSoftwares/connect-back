@@ -14,56 +14,63 @@ class UsersController < ApplicationController
   respond_to :json
 
 
-def forgotauthenticateotp
+  def forgotauthenticateotp
 
-  @user = User.where("phone = ?", params[:phone] ).first
-  otp = params[:otp]
-  # if @user.authenticate_otp(otp, drift: 60)
-    @user.otpconfirmed = true
-    @user.save
+    @user = User.where("phone = ?", params[:phone] ).first
+    otp = params[:otp]
+    if @user
+      if @user.authenticate_otp(otp, drift: 60)
+        @user.otpconfirmed = true
+        @user.save
 
-    loggedinuser = sign_in(:user, @user)
-    puts loggedinuser.id
-data = {
-  user_id: loggedinuser.id,
-  token: loggedinuser.authentication_token,
-  phone: loggedinuser.phone,
-  otpconfirmed: loggedinuser.otpconfirmed
-}
+        loggedinuser = sign_in(:user, @user)
+        puts loggedinuser.id
+        data = {
+          user_id: loggedinuser.id,
+          token: loggedinuser.authentication_token,
+          phone: loggedinuser.phone,
+          otpconfirmed: loggedinuser.otpconfirmed
+        }
 
-    render json: data, status: :created
+        render json: data, status: :created
+      else
+        render json: {message:'Incorrect OTP'} ,  status: :unprocessable_entity
+      end
 
-  # else
-    # render json: 'incorrect' ,  status: :unprocessable_entity
-  # end
+    else
 
+      render json: {message:'User does not exist with that phone number'} ,  status: :unprocessable_entity
+    end
 
-end
-
-
-def forgotsendotp
-
-  puts params[:phone]
-
-
-   @user = User.where("phone = ?", params[:phone] ).first
+  end
 
 
-  otpcode = @user.otp_code
+  def forgotsendotp
 
-  puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
+    puts params[:phone]
 
-  url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
+    @user = User.where("phone = ?", params[:phone] ).first
+    if @user
 
-  http = Net::HTTP.new(url.host, url.port)
+      otpcode = @user.otp_code
 
-  request = Net::HTTP::Get.new(url)
-  request.body = "{}"
+      puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
 
-  response = http.request(request)
-  puts response.read_body
+      url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
 
-end
+      http = Net::HTTP.new(url.host, url.port)
+
+      request = Net::HTTP::Get.new(url)
+      request.body = "{}"
+
+      response = http.request(request)
+      render json: {message:'OTP Send'}, status: :ok
+
+    else
+
+      render json: {message:'User does not exist with that phone number'} ,  status: :unprocessable_entity
+    end
+  end
 
 
 
