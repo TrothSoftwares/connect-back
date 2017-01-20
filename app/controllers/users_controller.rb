@@ -14,40 +14,11 @@ class UsersController < ApplicationController
   respond_to :json
 
 
-  def forgotauthenticateotp
-
-    @user = User.where("phone = ?", params[:phone] ).first
-    otp = params[:otp]
-    if @user
-      if @user.authenticate_otp(otp, drift: 60)
-        @user.otpconfirmed = true
-        @user.save
-
-        loggedinuser = sign_in(:user, @user)
-        puts loggedinuser.id
-        data = {
-          user_id: loggedinuser.id,
-          token: loggedinuser.authentication_token,
-          phone: loggedinuser.phone,
-          otpconfirmed: loggedinuser.otpconfirmed
-        }
-
-        render json: data, status: :created
-      else
-        render json: {message:'Incorrect OTP'} ,  status: :unprocessable_entity
-      end
-
-    else
-
-      render json: {message:'User does not exist with that phone number'} ,  status: :unprocessable_entity
-    end
-
-  end
 
 
   def forgotsendotp
 
-    puts params[:phone]
+    puts params
 
     @user = User.where("phone = ?", params[:phone] ).first
     if @user
@@ -73,6 +44,45 @@ class UsersController < ApplicationController
   end
 
 
+
+
+
+
+
+  def forgotauthenticateotp
+
+
+    @user = User.where("phone = ?", params[:phone] ).first
+    otp = params[:otp]
+    if @user
+      if @user.authenticate_otp(otp, drift: 60)
+        @user.otpconfirmed = true
+        @user.save
+
+        loggedinuser = sign_in(:user, @user)
+
+        data = {
+          user_id: loggedinuser.id,
+          token: loggedinuser.authentication_token,
+          phone: loggedinuser.phone,
+          otpconfirmed: loggedinuser.otpconfirmed
+        }
+        logger.info data
+
+        render json: data, status: :ok
+      else
+        render json: {message:'Incorrect OTP'} ,  status: :unprocessable_entity
+      end
+
+    else
+
+      render json: {message:'User does not exist with that phone number'} ,  status: :unprocessable_entity
+    end
+
+  end
+
+
+ 
 
   def authenticateotp
     @user = User.find(params[:user_id])
