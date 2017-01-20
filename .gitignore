@@ -17,5 +17,9 @@
 !/log/.keep
 !/tmp/.keep
 
+
+# Ignore otp key
+/config/initializers/keys.rb
+
 # Ignore Byebug command history file.
 .byebug_history

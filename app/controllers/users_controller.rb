@@ -25,9 +25,13 @@ class UsersController < ApplicationController
 
       otpcode = @user.otp_code
 
-      puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
+      
 
-      url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
+
+
+      puts "http://2factor.in/API/V1/"+ENV['OTP_SECRET']+"/SMS/"+@user.phone+"/"+otpcode
+
+      url = URI("http://2factor.in/API/V1/"+ENV['OTP_SECRET']+"/SMS/"+@user.phone+"/"+otpcode)
 
       http = Net::HTTP.new(url.host, url.port)
 
@@ -82,7 +86,7 @@ class UsersController < ApplicationController
   end
 
 
- 
+
 
   def authenticateotp
     @user = User.find(params[:user_id])
@@ -90,9 +94,9 @@ class UsersController < ApplicationController
     if @user.authenticate_otp(otp, drift: 60)
       @user.otpconfirmed = true
       @user.save
-      render json: @user, status: :ok
+      render json: {message:'Authentication Successful. '}, status: :ok
     else
-      render json: 'incorrect' ,  status: :unprocessable_entity
+      render json: {message:'Incorrect OTP'} ,  status: :unprocessable_entity
     end
   end
 
@@ -105,17 +109,18 @@ class UsersController < ApplicationController
 
     otpcode = @user.otp_code
 
-    puts "http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode
+    puts "http://2factor.in/API/V1/"+ENV['OTP_SECRET']+"/SMS/"+@user.phone+"/"+otpcode
 
-    url = URI("http://2factor.in/API/V1/cd592b05-d0d1-11e6-afa5-00163ef91450/SMS/"+@user.phone+"/"+otpcode)
+    url = URI("http://2factor.in/API/V1/"+ENV['OTP_SECRET']+"/SMS/"+@user.phone+"/"+otpcode)
 
     http = Net::HTTP.new(url.host, url.port)
 
     request = Net::HTTP::Get.new(url)
     request.body = "{}"
 
-    response = http.request(request)
-    puts response.read_body
+     response = http.request(request)
+    #response.read_body
+    render json: {message:'OTP Send'}, status: :ok
   end
 
 
