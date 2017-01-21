@@ -3,8 +3,8 @@ class UsersController < ApplicationController
 
   before_action :set_user, only: [:show, :update, :destroy]
   wrap_parameters :user, include: [:name, :password, :password_confirmation ,:phone]
-  # skip_before_action :authenticate_user_from_token! , only: [:create]
-  # skip_before_action :authenticate_user! ,  only: [:create]
+  skip_before_action :authenticate_user_from_token! , only: [:create]
+  skip_before_action :authenticate_user! ,  only: [:create]
 
 
   require 'uri'
@@ -25,7 +25,7 @@ class UsersController < ApplicationController
 
       otpcode = @user.otp_code
 
-      
+
 
 
 
